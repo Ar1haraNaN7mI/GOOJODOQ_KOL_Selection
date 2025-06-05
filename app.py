@@ -465,10 +465,13 @@ if __name__ == "__main__":
         # 生产环境配置
         app.run(
             host='0.0.0.0',
-            port=8000,
+            port=int(os.environ.get('PORT', 8000)),
             debug=False,
             threaded=True
         )
     else:
         logger.error("❌ 系统初始化失败，服务器启动中止")
-        exit(1) 
+        exit(1)
+
+# 添加Vercel部署所需的handler
+index_handler = app 
