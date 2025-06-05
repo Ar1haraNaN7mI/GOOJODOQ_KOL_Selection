@@ -131,8 +131,8 @@ class RealDataMatcher:
             min_gmv = max(product_price * 5, followers * 0.1)  # 至少5单或每粉丝0.1元
             estimated_gmv = max(estimated_gmv, min_gmv)
             
-            logger.debug(f"GMV预估: 价格¥{product_price}, 佣金{commission_rate*100:.1f}%, "
-                        f"转化率{final_conversion_rate*100:.3f}%, 预估GMV¥{estimated_gmv:.0f}")
+            logger.debug(f"GMV预估: 价格₫{product_price}, 佣金{commission_rate*100:.1f}%, "
+                        f"转化率{final_conversion_rate*100:.3f}%, 预估GMV₫{estimated_gmv:.0f}")
             
             return round(estimated_gmv, 0)
             
@@ -723,9 +723,9 @@ class RealDataMatcher:
             
             if results:
                 statistics.update({
-                    'total_cost_formatted': f"¥{sum(r['cost']['estimated_cost'] for r in results):,.0f}",
-                    'average_gmv': f"¥{sum(r['performance']['gmv'] for r in results) / len(results):,.0f}",
-                    'average_estimated_gmv': f"¥{sum(r['performance']['estimated_gmv_price_commission'] for r in results) / len(results):,.0f}"
+                    'total_cost_formatted': f"₫{sum(r['cost']['estimated_cost'] for r in results):,.0f}",
+                    'average_gmv': f"₫{sum(r['performance']['gmv'] for r in results) / len(results):,.0f}",
+                    'average_estimated_gmv': f"₫{sum(r['performance']['estimated_gmv_price_commission'] for r in results) / len(results):,.0f}"
                 })
             
             return {
