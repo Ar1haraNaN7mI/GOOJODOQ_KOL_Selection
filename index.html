@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOOJODOQ达人匹配系统- 直接数据匹配系统</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+</head>
+
+<body>
+    <!-- 背景效果 -->
+    <div class="background-gradient"></div>
+    <div id="particles-js"></div>
+
+    <div class="container">
+        <header>
+            <h1><i class="bi bi-tiktok"></i> GOOJODOQ达人匹配系统</h1>
+            <p>基于真实数据的产品-达人精准匹配</p>
+        </header>
+
+        <div class="glass-card">
+            <h2>产品搜索</h2>
+            <form id="searchForm">
+                <div class="input-group">
+                    <label for="productDescription">产品描述</label>
+                    <textarea id="productDescription" class="input-control" placeholder="请输入产品描述，例如：智能蓝牙耳机，支持主动降噪，长续航..." required></textarea>
+                </div>
+
+                <div class="flex gap-4 flex-wrap">
+                    <div class="input-group" style="flex: 1; min-width: 200px;">
+                        <label for="productPrice">商品价格 (₫)</label>
+                        <input type="number" id="productPrice" class="input-control" placeholder="输入商品价格" min="1" step="0.01" value="299000" required>
+                    </div>
+                    <div class="input-group" style="flex: 1; min-width: 200px;">
+                        <label for="commissionRate">达人抽佣比例 (%)</label>
+                        <input type="number" id="commissionRate" class="input-control" placeholder="输入抽佣比例" min="0.1" max="50" step="0.1" value="7.0" required>
+                        <small>推荐：3C产品通常在5%-15%之间</small>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 flex-wrap">
+                    <div class="input-group" style="flex: 1; min-width: 200px;">
+                        <label for="topK">推荐数量</label>
+                        <input type="number" id="topK" class="input-control" placeholder="最多推荐数量" min="1" max="30" value="10">
+                    </div>
+                    <div class="input-group" style="flex: 1; min-width: 200px;">
+                        <label for="minFollowers">最低粉丝数</label>
+                        <input type="number" id="minFollowers" class="input-control" placeholder="最低粉丝数" min="0" step="1000">
+                    </div>
+                </div>
+
+                <div class="flex gap-4 mt-4">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        <i class="bi bi-search"></i> 开始匹配
+                    </button>
+                    <button type="reset" class="btn btn-secondary" style="flex: 0.3;">
+                        <i class="bi bi-arrow-counterclockwise"></i> 重置
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 加载状态 -->
+        <div id="loadingPanel" class="glass-card" style="display: none; text-align: center; padding: 40px;">
+            <div class="loading" style="width: 50px; height: 50px; margin: 0 auto 20px;"></div>
+            <h3>正在处理请求...</h3>
+            <p>正在分析产品描述并匹配最佳达人，请稍候...</p>
+        </div>
+
+        <!-- 错误信息 -->
+        <div id="errorPanel" class="alert alert-danger" style="display: none;">
+            <h3><i class="bi bi-exclamation-triangle"></i> 处理请求时出错</h3>
+            <p id="errorMessage">未知错误</p>
+        </div>
+
+        <!-- 结果摘要 -->
+        <div id="resultsSummary" style="display: none;" class="results-summary"></div>
+
+        <!-- 推荐结果 -->
+        <div id="resultsPanel" style="display: none;">
+            <div class="flex justify-between items-center mb-4">
+                <h2>推荐结果</h2>
+                <div class="export-controls">
+                    <button id="exportExcel" class="btn btn-secondary btn-sm export-btn">
+                        <i class="bi bi-file-earmark-spreadsheet"></i> Excel
+                    </button>
+                    <button id="exportJson" class="btn btn-secondary btn-sm export-btn">
+                        <i class="bi bi-file-earmark-code"></i> JSON
+                    </button>
+                </div>
+            </div>
+            <div id="resultsContainer" class="card-grid"></div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化粒子背景
+        document.addEventListener('DOMContentLoaded', function() {
+            particlesJS('particles-js', {
+                "particles": {
+                    "number": {
+                        "value": 80,
+                        "density": {
+                            "enable": true,
+                            "value_area": 800
+                        }
+                    },
+                    "color": {
+                        "value": "#ffffff"
+                    },
+                    "shape": {
+                        "type": "circle",
+                        "stroke": {
+                            "width": 0,
+                            "color": "#000000"
+                        },
+                        "polygon": {
+                            "nb_sides": 5
+                        }
+                    },
+                    "opacity": {
+                        "value": 0.2,
+                        "random": true,
+                        "anim": {
+                            "enable": true,
+                            "speed": 1,
+                            "opacity_min": 0.1,
+                            "sync": false
+                        }
+                    },
+                    "size": {
+                        "value": 3,
+                        "random": true,
+                        "anim": {
+                            "enable": false,
+                            "speed": 40,
+                            "size_min": 0.1,
+                            "sync": false
+                        }
+                    },
+                    "line_linked": {
+                        "enable": true,
+                        "distance": 150,
+                        "color": "#ffffff",
+                        "opacity": 0.15,
+                        "width": 1
+                    },
+                    "move": {
+                        "enable": true,
+                        "speed": 2,
+                        "direction": "none",
+                        "random": true,
+                        "straight": false,
+                        "out_mode": "out",
+                        "bounce": false,
+                        "attract": {
+                            "enable": false,
+                            "rotateX": 600,
+                            "rotateY": 1200
+                        }
+                    }
+                },
+                "interactivity": {
+                    "detect_on": "canvas",
+                    "events": {
+                        "onhover": {
+                            "enable": true,
+                            "mode": "bubble"
+                        },
+                        "onclick": {
+                            "enable": true,
+                            "mode": "push"
+                        },
+                        "resize": true
+                    },
+                    "modes": {
+                        "grab": {
+                            "distance": 400,
+                            "line_linked": {
+                                "opacity": 1
+                            }
+                        },
+                        "bubble": {
+                            "distance": 400,
+                            "size": 4,
+                            "duration": 2,
+                            "opacity": 0.8,
+                            "speed": 3
+                        },
+                        "repulse": {
+                            "distance": 200,
+                            "duration": 0.4
+                        },
+                        "push": {
+                            "particles_nb": 4
+                        },
+                        "remove": {
+                            "particles_nb": 2
+                        }
+                    }
+                },
+                "retina_detect": true
+            });
+        });
+
+        // 全局变量
+        let currentResults = null;
+
+        // DOM 元素
+        const searchForm = document.getElementById('searchForm');
+        const loadingPanel = document.getElementById('loadingPanel');
+        const errorPanel = document.getElementById('errorPanel');
+        const errorMessage = document.getElementById('errorMessage');
+        const resultsPanel = document.getElementById('resultsPanel');
+        const resultsSummary = document.getElementById('resultsSummary');
+        const resultsContainer = document.getElementById('resultsContainer');
+
+        // 导出按钮
+        const exportExcel = document.getElementById('exportExcel');
+        const exportJson = document.getElementById('exportJson');
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', async() => {
+            try {
+                // 表单提交事件
+                searchForm.addEventListener('submit', handleSubmit);
+
+                // 导出按钮
+                exportExcel.addEventListener('click', () => exportData('excel'));
+                exportJson.addEventListener('click', () => exportData('json'));
+            } catch (error) {
+                console.error('初始化失败:', error);
+                showError('系统初始化失败，请刷新页面重试');
+            }
+        });
+
+        // 处理表单提交
+        async function handleSubmit(event) {
+            event.preventDefault();
+
+            // 获取表单数据
+            const productDescription = document.getElementById('productDescription').value.trim();
+            const productPrice = parseFloat(document.getElementById('productPrice').value) || null;
+            const commissionRate = parseFloat(document.getElementById('commissionRate').value) || null;
+            const topK = parseInt(document.getElementById('topK').value) || 10;
+            const minFollowers = parseInt(document.getElementById('minFollowers').value) || null;
+
+            if (!productDescription) {
+                showError('请输入产品描述');
+                return;
+            }
+
+            if (!productPrice || productPrice <= 0) {
+                showError('请输入有效的商品价格');
+                return;
+            }
+
+            if (!commissionRate || commissionRate <= 0 || commissionRate > 50) {
+                showError('请输入有效的抽佣比例 (0.1%-50%)');
+                return;
+            }
+
+            // 显示加载状态
+            showLoading();
+
+            try {
+                // 构建请求数据
+                const requestData = {
+                    product_description: productDescription,
+                    product_price: productPrice,
+                    commission_rate: commissionRate / 100, // 转换为小数
+                    top_k: topK
+                };
+
+                if (minFollowers) requestData.min_followers = minFollowers;
+
+                // 发送请求
+                const response = await fetch('/api/recommend', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // 保存结果
+                    currentResults = data;
+
+                    // 显示结果
+                    showResults(data);
+                } else {
+                    showError(data.error && data.error.message ? data.error.message : '推荐失败，请重试');
+                }
+            } catch (error) {
+                console.error('请求失败:', error);
+                showError('网络请求失败，请检查连接');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 显示结果
+        function showResults(data) {
+            // 隐藏错误面板
+            errorPanel.style.display = 'none';
+
+            // 显示结果面板
+            resultsPanel.style.display = 'block';
+
+            // 显示结果摘要
+            showResultsSummary(data);
+
+            // 清空结果容器
+            resultsContainer.innerHTML = '';
+
+            // 添加推荐卡片
+            if (data.recommendations && data.recommendations.length > 0) {
+                data.recommendations.forEach(rec => {
+                    resultsContainer.appendChild(createCreatorCard(rec));
+                });
+            } else {
+                resultsContainer.innerHTML = '<div class="glass-card" style="text-align: center;"><p>没有找到匹配的达人</p></div>';
+            }
+
+            // 滚动到结果
+            resultsSummary.scrollIntoView({
+                behavior: 'smooth'
+            });
+        }
+
+        // 显示结果摘要
+        function showResultsSummary(data) {
+            const stats = data.statistics;
+            const query = data.query;
+
+            // 创建摘要内容
+            let summaryHTML = `
+                <div class="summary-card">
+                    <div class="summary-value">${stats.returned_count || stats.total_count}</div>
+                    <div class="summary-label">实际推荐数</div>
+                    <div style="font-size: 0.7rem; opacity: 0.6; margin-top: 2px;">
+                        共筛选${stats.total_count}个
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value">${stats.average_gmv || stats.average_estimated_gmv || '计算中'}</div>
+                    <div class="summary-label">平均预估GMV</div>
+                    <div style="font-size: 0.7rem; opacity: 0.6; margin-top: 2px;">
+                        价格₫${query.product_price} × ${(query.commission_rate*100).toFixed(1)}%佣金
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value">${data.processing_time.toFixed(2)}秒</div>
+                    <div class="summary-label">处理时间</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value">${stats.product_category || '3C数码'}</div>
+                    <div class="summary-label">产品类别</div>
+                    <div style="font-size: 0.7rem; opacity: 0.6; margin-top: 2px;">
+                        ${stats.ranking_method || '3C产品专用算法'}
+                    </div>
+                </div>
+            `;
+
+            resultsSummary.innerHTML = summaryHTML;
+            resultsSummary.style.display = 'grid';
+        }
+
+        // 创建达人卡片
+        function createCreatorCard(creator) {
+            const card = document.createElement('div');
+            card.className = 'glass-card creator-card';
+
+            // 严格使用真实的GOOJODOQ达人用户名
+            const creatorUsername = creator.creator_username || '';
+            const displayName = creator.creator_nickname || creatorUsername;
+
+            // 确保数据有效
+            const historicalGmv = creator.performance.gmv || 0;
+            const estimatedGmv = creator.performance.estimated_gmv_price_commission || 0;
+            const followers = creator.audience.followers || 0;
+            const cost = creator.cost.estimated_cost || 0;
+
+            // 联系方式处理
+            const email = creator.creator_email || '无';
+            const otherContact = creator.creator_other_contact || '无';
+
+            // 准备详细数据HTML
+            let detailsHTML = '';
+            if (creator.extra_data) {
+                detailsHTML = '<div class="creator-extra-data">';
+                detailsHTML += '<h4 style="margin-top: 0; margin-bottom: 12px; width: 100%; grid-column: 1 / -1;">GOOJODOQ达人数据</h4>';
+
+                // 优先显示重要字段 - 更新为3C产品导向
+                const priorityFields = [
+                    'Creator_username', 'Affiliate_GMV', 'estimated_gmv_price_commission', '粉丝数',
+                    'Est_commission', 'CTR', 'Affiliate_orders', 'Avg_order_value', 'product_3c_score'
+                ];
+
+                // 添加优先字段
+                for (const field of priorityFields) {
+                    if (creator.extra_data[field] !== undefined) {
+                        const value = creator.extra_data[field];
+                        let formattedValue = value;
+
+                        // 格式化数值
+                        if (typeof value === 'number') {
+                            if (field.includes('GMV') || field.includes('value') || field.includes('commission') || field === 'estimated_gmv_price_commission') {
+                                formattedValue = `₫${value.toLocaleString()}`;
+                            } else if (field.includes('CTR')) {
+                                formattedValue = `${value.toFixed(2)}%`;
+                            } else if (field === 'product_3c_score') {
+                                formattedValue = `${value.toFixed(1)}分`;
+                            } else {
+                                formattedValue = value.toLocaleString();
+                            }
+                        }
+
+                        // 美化字段名
+                        const prettyName = field
+                            .replace('_', ' ')
+                            .replace('Affiliate', '联盟')
+                            .replace('粉丝数', '粉丝数')
+                            .replace('GMV', '交易额')
+                            .replace('orders', '订单数')
+                            .replace('Est commission', '佣金')
+                            .replace('estimated gmv price commission', '预估GMV')
+                            .replace('Avg order value', '平均订单额')
+                            .replace('product 3c score', '3C适配度')
+                            .replace('CTR', '点击率');
+
+                        detailsHTML += `
+                            <div class="creator-details-item">
+                                <span class="creator-details-label">${prettyName}</span>
+                                <span class="creator-details-value">${formattedValue}</span>
+                            </div>
+                        `;
+                    }
+                }
+
+                detailsHTML += '</div>';
+            }
+
+            // 确定风险等级颜色 - 基于预估GMV
+            const riskColor = estimatedGmv > 100000 ? "#22c55e" : (estimatedGmv > 50000 ? "#eab308" : "#94a3b8");
+
+            // 构建卡片HTML
+            card.innerHTML = `
+                <div class="creator-card-header">
+                    <div class="flex justify-between items-center">
+                        <h3 style="margin: 0; color: ${riskColor};">
+                            ${displayName}
+                        </h3>
+                        <span class="badge ${estimatedGmv >= 100000 ? 'badge-success' : (estimatedGmv >= 50000 ? 'badge-warning' : '')}">
+                            预估₫${(estimatedGmv/10000).toFixed(1)}万
+                        </span>
+                    </div>
+                    <div style="font-size: 0.85rem; opacity: 0.7; margin-top: 4px;">
+                        @${creatorUsername}
+                    </div>
+                </div>
+                <div class="creator-card-body">
+                    <div class="flex gap-4 mb-4">
+                        <div style="flex: 1;">
+                            <div class="stat-label">综合得分</div>
+                            <div class="stat-value">${creator.product_matching ? creator.product_matching.combined_score.toFixed(1) : 'N/A'}</div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div class="stat-label">粉丝</div>
+                            <div class="stat-value">${followers.toLocaleString()}</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 mb-4">
+                        <div style="flex: 1;">
+                            <div class="stat-label">历史GMV</div>
+                            <div class="stat-value">₫${historicalGmv.toLocaleString()}</div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div class="stat-label">预估GMV</div>
+                            <div class="stat-value">₫${estimatedGmv.toLocaleString(undefined, {maximumFractionDigits: 0})}</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 mb-4">
+                        <div style="flex: 1;">
+                            <div class="stat-label">3C适配度</div>
+                            <div class="stat-value">${creator.product_matching && creator.product_matching.product_3c_score ? creator.product_matching.product_3c_score.toFixed(1) + '分' : '无数据'}</div>
+                            <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 2px;">
+                                ${creator.metadata.product_category || '通用数码'}
+                            </div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div class="stat-label">CTR</div>
+                            <div class="stat-value">${creator.performance.ctr ? creator.performance.ctr.toFixed(2) + '%' : '无数据'}</div>
+                            <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 2px;">
+                                点击转化率
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 联系方式信息 -->
+                    <div class="flex gap-4 mb-4" style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px;">
+                        <div style="flex: 1;">
+                            <div class="stat-label">联系方式</div>
+                            <div class="stat-value" style="font-size: 0.9rem; word-break: break-all;">
+                                ${email === '无' ? '无' : email}
+                            </div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div class="stat-label">其他联系方式</div>
+                            <div class="stat-value" style="font-size: 0.9rem; word-break: break-all;">
+                                ${otherContact === '无' ? '无' : otherContact}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 真实数据详情 -->
+                    ${detailsHTML}
+                </div>
+                <div class="creator-card-footer">
+                    <div style="font-size: 0.85rem;">
+                        <i class="bi bi-info-circle"></i> 基于真实GOOJODOQ交易数据，专门针对3C产品优化的推荐算法
+                    </div>
+                </div>
+            `;
+
+            return card;
+        }
+
+        // 显示加载状态
+        function showLoading() {
+            loadingPanel.style.display = 'block';
+            errorPanel.style.display = 'none';
+            resultsPanel.style.display = 'none';
+            resultsSummary.style.display = 'none';
+        }
+
+        // 隐藏加载状态
+        function hideLoading() {
+            loadingPanel.style.display = 'none';
+        }
+
+        // 显示错误
+        function showError(message) {
+            errorPanel.style.display = 'block';
+            errorMessage.textContent = message;
+            resultsPanel.style.display = 'none';
+            resultsSummary.style.display = 'none';
+        }
+
+        // 导出数据
+        function exportData(format) {
+            if (!currentResults) return;
+
+            const recommendations = currentResults.recommendations;
+            if (!recommendations || recommendations.length === 0) return;
+
+            if (format === 'excel') {
+                // 准备Excel数据 - 增加更多字段
+                const headers = [
+                    '排名', '达人用户名', '达人昵称', '历史GMV', '预估GMV', '粉丝数',
+                    '3C适配度', '综合评分', '联系方式', '其他联系方式', 'CTR', '平均订单价值',
+                    '触达方式', '回复情况', '寄样时间', '寄样品', '寄样成本',
+                    '视频上线时间', '链接', '带货GMV', '佣金', '视频播放', '转发', '点赞', '评论数'
+                ];
+
+                const rows = recommendations.map(rec => [
+                    rec.rank,
+                    rec.creator_username || '',
+                    rec.creator_nickname || '无',
+                    (rec.performance && rec.performance.gmv) || 0,
+                    (rec.performance && rec.performance.estimated_gmv_price_commission) || 0,
+                    (rec.audience && rec.audience.followers) || 0,
+                    (rec.product_matching && rec.product_matching.product_3c_score) || 0,
+                    (rec.product_matching && rec.product_matching.combined_score) || 0,
+                    rec.creator_email || '无',
+                    rec.creator_other_contact || '无',
+                    (rec.performance && rec.performance.ctr) || 0,
+                    (rec.performance && rec.performance.avg_order_value) || 0,
+                    // 后续字段不连接任何数据，保持为空以便手动填写
+                    '', // 触达方式
+                    '', // 回复情况
+                    '', // 寄样时间
+                    '', // 寄样品
+                    '', // 寄样成本
+                    '', // 视频上线时间
+                    '', // 链接
+                    '', // 带货GMV (独立统计，不使用历史数据)
+                    '', // 佣金 (独立统计，不使用历史数据)
+                    '', // 视频播放
+                    '', // 转发
+                    '', // 点赞
+                    '' // 评论数
+                ]);
+
+                // 创建工作簿数据
+                const workbookData = [headers, ...rows];
+
+                // 转换为CSV格式 (Excel可以正确打开UTF-8 BOM的CSV)
+                const csvContent = workbookData.map(row =>
+                    row.map(cell => {
+                        // 处理包含逗号或引号的字段
+                        const cellStr = String(cell);
+                        if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+                            return '"' + cellStr.replace(/"/g, '""') + '"';
+                        }
+                        return cellStr;
+                    }).join(',')
+                ).join('\r\n');
+
+                // 添加UTF-8 BOM以确保Excel正确显示中文
+                const bom = '\uFEFF';
+                const finalContent = bom + csvContent;
+
+                downloadFile(finalContent, 'goojodoq_creators.csv', 'text/csv;charset=utf-8');
+            } else {
+                // 导出JSON
+                const jsonContent = JSON.stringify(currentResults, null, 2);
+                downloadFile(jsonContent, 'goojodoq_creators.json', 'application/json;charset=utf-8');
+            }
+        }
+
+        // 下载文件
+        function downloadFile(content, fileName, contentType) {
+            const blob = new Blob([content], {
+                type: contentType
+            });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            a.click();
+
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+
+</html>
