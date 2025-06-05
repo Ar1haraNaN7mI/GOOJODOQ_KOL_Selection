@@ -1,6 +1,41 @@
 # GOOJODOQ达人匹配系统 v2.0
 
-> 基于152,404条真实越南GOOJODOQ达人数据的智能匹配系统，采用GMV导向和激进差异化定价策略
+> 基于真实越南GOOJODOQ达人数据的智能匹配系统，专为3C产品优化
+
+## 系统简介
+
+- **真实数据**：使用真实越南达人和产品数据
+- **智能匹配**：多维度加权产品匹配算法
+- **3C产品优化**：特别针对数码、电子产品进行优化
+
+## 快速部署
+
+1. 确保你的Node.js和npm已安装
+2. 安装Vercel CLI: `npm i -g vercel`
+3. 克隆本仓库: `git clone https://github.com/Ar1haraNaN7mI/GOOJODOQ_KOL_Selection.git`
+4. 进入项目目录: `cd GOOJODOQ_KOL_Selection`
+5. 部署到Vercel: `vercel`
+
+## 本地运行
+
+```bash
+# 安装依赖
+pip install -r requirements.txt
+
+# 启动服务
+python app.py
+
+# 访问系统
+# 浏览器打开: http://localhost:8000
+```
+
+## 文件结构
+
+- `app.py`: Flask主应用
+- `real_data_matcher.py`: 达人匹配核心算法
+- `Match_ProductCreator-main/`: 数据文件目录
+- `static/`: 静态资源文件
+- `index.html`: 前端界面
 
 ## 🎯 系统特点
 

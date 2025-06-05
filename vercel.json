@@ -2,7 +2,28 @@
     "version": 2,
     "builds": [{
         "src": "app.py",
-        "use": "@vercel/python"
+        "use": "@vercel/python",
+        "config": {
+            "maxLambdaSize": "15mb",
+            "runtime": "python3.9",
+            "includeFiles": [
+                "app.py",
+                "real_data_matcher.py",
+                "index.html",
+                "requirements.txt",
+                "static/**",
+                "Match_ProductCreator-main/Creator_List_Viet.xlsx",
+                "Match_ProductCreator-main/Product_Creator_OCRAll_VietLink0603.xlsx"
+            ],
+            "excludeFiles": [
+                ".git/**",
+                ".venv/**",
+                "__pycache__/**",
+                "*.md",
+                "*.txt",
+                "!requirements.txt"
+            ]
+        }
     }],
     "routes": [{
         "src": "/(.*)",

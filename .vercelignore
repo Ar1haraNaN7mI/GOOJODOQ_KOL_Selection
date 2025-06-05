@@ -1,0 +1,32 @@
+.git
+.github
+__pycache__
+*.pyc
+.venv
+venv
+.DS_Store
+.vscode
+.idea
+.pytest_cache
+.coverage
+htmlcov
+.tox
+build
+dist
+*.egg-info
+.env
+*.log
+logs/
+
+# 大型文档文件
+算法介绍.txt
+技术文档.md
+系统更新总结.md
+环境安装指南.md
+一键启动教程.txt
+更新后的需求.txt
+检查环境.py
+上传到GitHub指南.md
+
+# 不需要的项目文件
+export.sh 
